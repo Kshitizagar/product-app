@@ -1,0 +1,743 @@
+import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
+import Card from './Card';
+import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';  // install if not done
+// import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';
+// import BoxIcon from './BoxIcon'; // Assuming you have a BoxIcon component
+// import { FaBox } from 'react-icons/fa';  // Font Awesome box icon
+
+
+import './App.css';
+import UploadExcel from './UploadExcel';
+// import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
+const pieColors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
+const renderCustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #ccc',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        fontSize: '14px',
+        color: '#333'
+      }}>
+        <strong>{payload[0].name}</strong>: {payload[0].value}
+      </div>
+    );
+  }
+  return null;
+};
+
+
+function App() {
+  const [products, setProducts] = useState([]);
+  const [form, setForm] = useState({
+    name: '',
+    price: '',
+    description: '',
+    product_link: '',
+    image_link: '',
+    category: '',
+  });
+
+  const [editProduct, setEditProduct] = useState(null); // product being edited
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [loadingEmail, setLoadingEmail] = useState(false);
+
+
+  const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
+  category: cat,
+  count: products.filter(p => p.category === cat).length,
+}));
+
+  const productsPerPage = 5;
+
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const filteredProducts = products
+  .filter(p => categoryFilter ? p.category === categoryFilter : true)
+  .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+
+  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+  // const totalPages = Math.ceil(products.length / productsPerPage);
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/products')
+      .then(res => res.json())
+      .then(data => setProducts(data));
+  }, []);
+
+  const handleChange = e => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    const res = await fetch('http://localhost:5000/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+    const newProduct = await res.json();
+    setProducts([...products, newProduct]);
+    setForm({
+      name: '',
+      price: '',
+      description: '',
+      product_link: '',
+      image_link: '',
+      category: ''
+    });
+  };
+
+  const handleDelete = async id => {
+    await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+    setProducts(products.filter(p => p._id !== id));
+  };
+
+  const handleEditClick = (product) => {
+    setEditProduct(product); // Open modal with prefilled product
+  };
+
+  const handleEditChange = e => {
+    const { name, value } = e.target;
+    setEditProduct(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async e => {
+    e.preventDefault();
+    const res = await fetch(`http://localhost:5000/api/products/${editProduct._id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editProduct),
+    });
+    const updatedProduct = await res.json();
+    setProducts(products.map(p => (p._id === updatedProduct._id ? updatedProduct : p)));
+    setEditProduct(null); // Close modal
+  };
+
+  const limitWords = (text, wordLimit) => {
+    const words = text.split(' ');
+    return words.length > wordLimit
+      ? words.slice(0, wordLimit).join(' ') + '...'
+      : text;
+  };
+
+//   const convertToCSV = (arr) => {
+//   const headers = ['Name', 'Price', 'category', 'Description', 'Product Link', 'Image Link'];
+//   const rows = arr.map(p => [
+//     p.name,
+//     p.price,
+//     p.category,
+//     p.description.replace(/[\r\n]+/g, ' '),
+//     p.product_link,
+//     p.image_link
+//   ]);
+
+//   const csvContent = [
+//     headers.join(','),
+//     ...rows.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+//   ].join('\n');
+
+//   return csvContent;
+// };
+
+const convertToCSV = (arr) => {
+  const headers = ['Name', 'Price', 'Category', 'Description', 'Product Link', 'Image Link'];
+  const rows = arr.map(p => [
+    p.name,
+    p.price,
+    p.category,
+    p.description.replace(/[\r\n]+/g, ' '),
+    `=HYPERLINK("${p.product_link}", "link")`,
+    `=HYPERLINK("${p.image_link}", "link")`
+  ]);
+
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row =>
+      row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
+    )
+  ].join('\n');
+
+  return csvContent;
+};
+
+
+
+
+
+  const downloadFile = (content, filename, mimeType) => {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+  const convertToText = (arr) => {
+  return arr.map(p =>
+    `Name: ${p.name}\nPrice: ₹${p.price}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nImage Link: ${p.image_link}\n\n`
+  ).join('');
+};
+
+//   const handleDownloadCSV = () => {
+//   const csv = convertToCSV(products);
+//   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+//   const url = URL.createObjectURL(blob);
+
+//   const link = document.createElement('a');
+//   link.href = url;
+//   link.setAttribute('download', 'products.csv');
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// };
+
+const priceRangeData = [
+  { name: '< 500', value: products.filter(p => p.price < 500).length },
+  { name: '500 - 1000', value: products.filter(p => p.price >= 500 && p.price <= 1000).length },
+  { name: '1000 - 10000', value: products.filter(p => p.price > 1000 && p.price <= 10000).length },
+  { name: '> 10000', value: products.filter(p => p.price > 10000).length },
+];
+
+const pieColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff6e76'];
+
+
+// const handleSendEmail = async () => {
+//   try {
+//     const response = await fetch('http://localhost:5000/api/send-email', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ products }),  // send product data to backend
+//     });
+    
+//     const result = await response.json();
+//     if (response.ok) {
+//       alert("✅ Email sent successfully!");
+//     } else {
+//       alert(`❌ Failed to send email----: ${result.error}`);
+//     }
+//   } catch (err) {
+//     alert("❌ Error sending email.");
+//     console.error(err);
+//   }
+// };
+
+const handleSendEmail = async () => {
+  setLoadingEmail(true); // Show loader
+  try {
+    const response = await fetch('http://localhost:5000/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products }),
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      alert("✅ Email sent successfully!");
+    } else {
+      alert(`❌ Failed to send email: ${result.error}`);
+    }
+  } catch (err) {
+    alert("❌ Error sending email.");
+    console.error(err);
+  }
+  setLoadingEmail(false); // Hide loader
+};
+
+
+
+  return (
+    <div className="container">
+      {/* <div style={{
+        display: 'flex',
+        gap: '20px',
+        marginBottom: '30px',
+        marginTop: '10px',
+        flexWrap: 'wrap',
+      }}>
+        <Card title="Total Products" value={products.length} icon={<FaBox />} />
+        <Card title="Categories" value={[...new Set(products.map(p => p.category))].length} icon={<FaTags />} />
+        <Card title="Inventory Value" value={"₹" + products.reduce((acc, p) => acc + Number(p.price || 0), 0)} icon={<FaChartLine />} />
+      </div> */}
+
+      {/* <h3>Send Product Email in Bulk</h3>
+      <UploadExcel /> */}
+
+      {/* <h2>Add Product</h2> */}
+      <h2 className="section-heading">
+        <span role="img" aria-label="add">🛒</span> Add Product
+      </h2>
+
+        {/* <form onSubmit={handleSubmit}>
+          <input name="name" placeholder="Product Name" value={form.name} onChange={handleChange} required />
+          <input name="price" placeholder="Product Price" type="number" value={form.price} onChange={handleChange} required />
+          <input name="description" placeholder="Product description" value={form.description} onChange={handleChange} required />
+          <input name="product_link" placeholder="Product link" value={form.product_link} onChange={handleChange} required />
+          <input name="image_link" placeholder="Image link" value={form.image_link} onChange={handleChange} required />
+          <select name="category" value={form.category} onChange={handleChange} required>
+            <option value="" disabled>Select Category</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+          <button type="submit">Add</button>
+        </form> */}
+        <form onSubmit={handleSubmit}>
+          <input className="form-input" name="name" placeholder="Product Name" value={form.name} onChange={handleChange} required />
+          <input className="form-input" name="price" placeholder="Product Price" type="number" value={form.price} onChange={handleChange} required />
+          <input className="form-input" name="description" placeholder="Product description" value={form.description} onChange={handleChange} required />
+          <input className="form-input" name="product_link" placeholder="Product link" value={form.product_link} onChange={handleChange} required />
+          <input className="form-input" name="image_link" placeholder="Image link" value={form.image_link} onChange={handleChange} required />
+          
+          <select className="form-input" name="category" value={form.category} onChange={handleChange} required>
+            <option value="" disabled>Select Category</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+
+          <button type="submit">Add</button>
+        </form>
+
+
+      {/* <h3>Product List</h3> */}
+
+      {/* <div style={{ marginBottom: '10px' }}>
+        <label style={{ fontWeight: 'bold', marginRight: '10px' }}>📥 Download Format:</label>
+        <select
+          onChange={(e) => {
+            const type = e.target.value;
+            if (type === 'csv') {
+              const csv = convertToCSV(products);
+              downloadFile(csv, 'products.csv', 'text/csv');
+            } else if (type === 'txt') {
+              const txt = convertToText(products);
+              downloadFile(txt, 'products.txt', 'text/plain');
+            }
+            e.target.selectedIndex = 0; // Reset to placeholder
+          }}
+          style={{ padding: '6px' }}
+        >
+          <option value="">Select format</option>
+          <option value="csv">Download as CSV</option>
+          <option value="txt">Download as TXT</option>
+        </select>
+        <button
+          onClick={handleSendEmail}
+          style={{ padding: '8px 12px', backgroundColor: '#4CAF50', color: 'white', border: 'none', marginLeft: '10px' }}
+        >
+          📧 Send Product Email
+        </button>
+        <select
+        value={categoryFilter}
+        onChange={(e) => {
+          setCategoryFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        style={{ padding: '8px', marginRight: '10px', marginLeft: '10px' }}
+        // style={{ padding: '1px', marginRight: '1px' }}
+      >
+        <option value="">All Categories</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+      <input
+        type="text"
+        placeholder="Search by product name"
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
+        style={{ padding: '8px', width: '300px' }}
+        // style={{ padding: '1px', width: '31px' }}
+      />
+      </div> */}
+      <div style={{
+        marginBottom: '20px',
+        padding: '16px',
+        backgroundColor: '#ffffff',
+        borderRadius: '10px',
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <label style={{ fontWeight: 'bold', marginRight: '10px', fontSize: '16px' }}>📥 Download Format :</label>
+
+        <select
+          onChange={(e) => {
+            const type = e.target.value;
+            if (type === 'csv') {
+              const csv = convertToCSV(products);
+              downloadFile(csv, 'products.csv', 'text/csv');
+            } else if (type === 'txt') {
+              const txt = convertToText(products);
+              downloadFile(txt, 'products.txt', 'text/plain');
+            }
+            e.target.selectedIndex = 0;
+          }}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            fontSize: '15px',
+            backgroundColor: '#f0f8ff',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">Select format</option>
+          <option value="csv">Download as CSV</option>
+          <option value="txt">Download as TXT</option>
+        </select>
+
+        {/* <button
+          onClick={handleSendEmail}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '15px',
+          }}
+        >
+          📧 Send Product Email
+        </button> */}
+
+        <button
+          onClick={handleSendEmail}
+          disabled={loadingEmail}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: loadingEmail ? '#aaa' : '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: loadingEmail ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+            fontSize: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          {loadingEmail ? (
+            <>
+              <span className="spinner" /> Sending...
+            </>
+          ) : (
+            <>📧 Send Product Email</>
+          )}
+        </button>
+
+
+        <select
+          value={categoryFilter}
+          onChange={(e) => {
+            setCategoryFilter(e.target.value);
+            setCurrentPage(1);
+          }}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            fontSize: '15px',
+            backgroundColor: '#f9f9f9',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">All Categories</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="🔍 Search by product name"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+          }}
+          style={{
+            padding: '8px 12px',
+            width: '250px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            fontSize: '15px'
+          }}
+        />
+      </div>
+
+      {/* <button
+        onClick={handleSendEmail}
+        style={{ padding: '8px 12px', backgroundColor: '#4CAF50', color: 'white', border: 'none', marginLeft: '10px' }}
+      >
+        📧 Send Product Email
+      </button> */}
+   {/* <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+      <select
+        value={categoryFilter}
+        onChange={(e) => {
+          setCategoryFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        style={{ padding: '8px', marginRight: '10px' }}
+        // style={{ padding: '1px', marginRight: '1px' }}
+      >
+        <option value="">All Categories</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+
+      <input
+        type="text"
+        placeholder="Search by product name"
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
+        style={{ padding: '8px', width: '300px' }}
+        // style={{ padding: '1px', width: '31px' }}
+      />
+    </div> */}
+
+      {/* <h3>Product List</h3> */}
+      {/* <h3>Dashboard</h3> */}
+      {/* <br></br> */}
+      <div style={{ marginTop: '20px' }}></div>
+
+      <UploadExcel />
+      <h3>Product List</h3>
+      <table border="1" cellPadding="10" style={{ marginTop: '20px', width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            <th>S.No</th>
+            <th>Name</th>
+            <th>Price (₹)</th>
+            <th>Category</th>
+            
+            <th>Description</th>
+            <th>Product Link</th>
+            <th>Image</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentProducts.map((p, index) => (
+            <tr key={p._id}>
+              <td>{indexOfFirstProduct + index + 1}</td> {/* 👈 S.No logic */}
+              {/* <td>{p.name}</td> */}
+
+              <td style={{ position: 'relative' }}>
+                <div className="hover-description">
+                  {limitWords(p.name || '', 3)}
+                  <div className="hover-popup">
+                    {p.name}
+                  </div>
+                </div>
+              </td>
+
+              <td>{p.price}</td>
+              <td>{p.category}</td>
+              {/* <td>{limitWords(p.description || '', 4)}</td> */}
+              <td style={{ position: 'relative' }}>
+                <div className="hover-description">
+                  {limitWords(p.description || '', 4)}
+                  <div className="hover-popup">
+                    {p.description}
+                  </div>
+                </div>
+              </td>
+              <td><a href={p.product_link} target="_blank" rel="noopener noreferrer">Open</a></td>
+              <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
+              <td>
+                <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
+                <button className="edit-btn" onClick={() => handleEditClick(p)}>Update</button>
+              </td>
+              {/* <td style={{ display: 'flex', gap: '8px' }}>
+                <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
+                <button className="edit-btn" onClick={() => handleEditClick(p)}>Update</button>
+              </td> */}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="pagination">
+        <button onClick={handlePrevious} disabled={currentPage === 1}>Previous</button>
+        <span>Page {currentPage} of {totalPages}</span>
+        <button onClick={handleNext} disabled={currentPage === totalPages}>Next</button>
+      </div>
+
+   <h3 style={{ marginTop: '40px' }}>Product Insights</h3>
+  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '40px' }}>
+    {/* Bar Chart */}
+    <div style={{ flex: 1 }}>
+      <h4 style={{textAlign: 'center'}}>Distribution by Category</h4>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="category" />
+          <YAxis allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey="count" fill="#4CAF50" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+    
+
+    {/* Pie Chart */}
+    <div style={{ flex: 1 }}>
+      <h4 style={{textAlign: 'center'}}>Distribution by Price Range</h4>
+      <ResponsiveContainer width="100%" height={300}>
+  <PieChart>
+    <defs>
+      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#ccc" />
+      </filter>
+    </defs>
+
+    <Pie
+      data={priceRangeData}
+      cx="50%"
+      cy="50%"
+      outerRadius={100}
+      dataKey="value"
+      nameKey="name"
+      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+      isAnimationActive={true}
+      animationDuration={800}
+      filter="url(#shadow)"
+    >
+      {priceRangeData.map((entry, index) => (
+        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+      ))}
+    </Pie>
+    <Tooltip content={renderCustomTooltip} />
+    <Legend
+      layout="horizontal"
+      verticalAlign="bottom"
+      align="center"
+      iconType="circle"
+      wrapperStyle={{
+        marginTop: '10px',
+        fontSize: '14px',
+        color: '#444'
+      }}
+    />
+  </PieChart>
+</ResponsiveContainer>
+    </div>
+  </div>
+  <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+  <Card
+  title="Total Products"
+  value={products.length}
+  icon={<FaBox />}
+  color="#4CAF50"
+  bgColor="#E8F5E9" // Light green background
+/>
+
+<Card
+  title="Categories"
+  value={[...new Set(products.map(p => p.category))].length}
+  icon={<FaTags />}
+  color="#2196F3"
+  bgColor="#E3F2FD" // Light blue background
+/>
+
+<Card
+  title="Inventory Value"
+  value={"₹" + products.reduce((acc, p) => acc + Number(p.price || 0), 0)}
+  icon={<FaChartLine />}
+  color="#FF5722"
+  bgColor="#FBE9E7" // Light orange background
+/>
+
+</div>
+
+      {/* EDIT MODAL */}
+      {editProduct && (
+        <div className="modal-overlay">
+  <div className="modal">
+    <h3>Edit Product</h3>
+    <form onSubmit={handleEditSubmit}>
+      <label>Product Name</label>
+      <input name="name" value={editProduct.name} onChange={handleEditChange} placeholder="Product Name" required />
+
+      <label>Price (₹)</label>
+      <input name="price" type="number" value={editProduct.price} onChange={handleEditChange} placeholder="Price" required />
+      <label>Category</label>
+      <select name="category" value={editProduct.category} onChange={handleEditChange} required>
+        <option value="" disabled>Select Category</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
+
+      <label>Description</label>
+      <input name="description" value={editProduct.description} onChange={handleEditChange} placeholder="Description" required />
+
+      <label>Product Link</label>
+      <input name="product_link" value={editProduct.product_link} onChange={handleEditChange} placeholder="Product Link" />
+
+      <label>Image Link</label>
+      <input name="image_link" value={editProduct.image_link} onChange={handleEditChange} placeholder="Image Link" />
+
+      <button type="submit">Update</button>
+      <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
+    </form>
+  </div>
+</div>
+
+    
+      )}
+    </div>
+  );
+}
+
+export default App;
