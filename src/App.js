@@ -87,7 +87,7 @@ function App() {
   };
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/products')
+    fetch('https://appbackend-qmsw.onrender.com/api/products')
       .then(res => res.json())
       .then(data => setProducts(data));
   }, []);
@@ -98,7 +98,7 @@ function App() {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/products', {
+    const res = await fetch('https://appbackend-qmsw.onrender.com/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -116,7 +116,7 @@ function App() {
   };
 
   const handleDelete = async id => {
-    await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+    await fetch(`https://appbackend-qmsw.onrender.com/api/products/${id}`, { method: 'DELETE' });
     setProducts(products.filter(p => p._id !== id));
   };
 
@@ -131,7 +131,7 @@ function App() {
 
   const handleEditSubmit = async e => {
     e.preventDefault();
-    const res = await fetch(`http://localhost:5000/api/products/${editProduct._id}`, {
+    const res = await fetch(`https://appbackend-qmsw.onrender.com/api/products/${editProduct._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editProduct),
@@ -255,7 +255,7 @@ const pieColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff6e76'];
 const handleSendEmail = async () => {
   setLoadingEmail(true); // Show loader
   try {
-    const response = await fetch('http://localhost:5000/api/send-email', {
+    const response = await fetch('https://appbackend-qmsw.onrender.com/api/send-email', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ products }),
