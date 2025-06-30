@@ -8,7 +8,7 @@ function UploadExcel() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://localhost:5000/api/send-email-excel", {
+    const res = await fetch("https://appbackend-qmsw.onrender.com/api/send-email-excel", {
       method: "POST",
       body: formData
     });
