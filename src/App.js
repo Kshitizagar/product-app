@@ -16,7 +16,7 @@ import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';  // install if not 
 import './App.css';
 import UploadExcel from './UploadExcel';
 // import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
-const pieColors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
+// const pieColors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
 const renderCustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
@@ -551,127 +551,139 @@ const handleSendEmail = async () => {
       <div style={{ marginTop: '20px' }}></div>
 
       <UploadExcel />
-      <h3>Product List</h3>
-      <table border="1" cellPadding="10" style={{ marginTop: '20px', width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th>S.No</th>
-            <th>Name</th>
-            <th>Price (₹)</th>
-            <th>Category</th>
-            
-            <th>Description</th>
-            <th>Product Link</th>
-            <th>Image</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentProducts.map((p, index) => (
-            <tr key={p._id}>
-              <td>{indexOfFirstProduct + index + 1}</td> {/* 👈 S.No logic */}
-              {/* <td>{p.name}</td> */}
+      <h1>Product List</h1>
 
-              <td style={{ position: 'relative' }}>
-                <div className="hover-description">
-                  {limitWords(p.name || '', 3)}
-                  <div className="hover-popup">
-                    {p.name}
-                  </div>
-                </div>
-              </td>
-
-              <td>{p.price}</td>
-              <td>{p.category}</td>
-              {/* <td>{limitWords(p.description || '', 4)}</td> */}
-              <td style={{ position: 'relative' }}>
-                <div className="hover-description">
-                  {limitWords(p.description || '', 4)}
-                  <div className="hover-popup">
-                    {p.description}
-                  </div>
-                </div>
-              </td>
-              <td><a href={p.product_link} target="_blank" rel="noopener noreferrer">Open</a></td>
-              <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
-              <td>
-                <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
-                <button className="edit-btn" onClick={() => handleEditClick(p)}>Update</button>
-              </td>
-              {/* <td style={{ display: 'flex', gap: '8px' }}>
-                <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
-                <button className="edit-btn" onClick={() => handleEditClick(p)}>Update</button>
-              </td> */}
+      <div style={{ overflowX: 'auto' }}>
+        <table border="1" cellPadding="10" style={{ marginTop: '20px', width: '100%', borderCollapse: 'collapse', minWidth: '800px'  }}>
+          <colgroup>
+            <col style={{ width: '5%' }} />   {/* S.No */}
+            <col style={{ width: '20%' }} />  {/* Name */}
+            <col style={{ width: '5%' }} />  {/* Price */}
+            <col style={{ width: '10%' }} />  {/* Category */}
+            <col style={{ width: '20%' }} />  {/* Description */}
+            <col style={{ width: '5%' }} />  {/* Product Link */}
+            <col style={{ width: '5%' }} />  {/* Image */}
+            <col style={{ width: '10%' }} />  {/* Actions */}
+          </colgroup>
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Name</th>
+              <th>Price(₹)</th>
+              <th>Category</th>            
+              <th>Description</th>
+              <th>Product Link</th>
+              <th>Image</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {currentProducts.map((p, index) => (
+              <tr key={p._id}>
+                <td>{indexOfFirstProduct + index + 1}</td> {/* 👈 S.No logic */}
+                
+                <td style={{ position: 'relative' }}>
+                  <div className="hover-description">
+                    {limitWords(p.name || '', 3)}
+                    <div className="hover-popup">
+                      {p.name}
+                    </div>
+                  </div>
+                </td>
+                <td>{p.price}</td>
+                <td>{p.category}</td>
+                <td style={{ position: 'relative' }}>
+                  <div className="hover-description">
+                    {limitWords(p.description || '', 4)}
+                    <div className="hover-popup">
+                      {p.description}
+                    </div>
+                  </div>
+                </td>
+                <td><a href={p.product_link} target="_blank" rel="noopener noreferrer">Open</a></td>
+                <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
+                <td>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                    <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
+                    <button className="edit-btn" onClick={() => handleEditClick(p)}>Update</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+
+
+
       <div className="pagination">
         <button onClick={handlePrevious} disabled={currentPage === 1}>Previous</button>
         <span>Page {currentPage} of {totalPages}</span>
         <button onClick={handleNext} disabled={currentPage === totalPages}>Next</button>
       </div>
 
-   <h3 style={{ marginTop: '40px' }}>Product Insights</h3>
-  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '40px' }}>
-    {/* Bar Chart */}
-    <div style={{ flex: 1 }}>
-      <h4 style={{textAlign: 'center'}}>Distribution by Category</h4>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="category" />
-          <YAxis allowDecimals={false} />
-          <Tooltip />
-          <Bar dataKey="count" fill="#4CAF50" />
-        </BarChart>
-      </ResponsiveContainer>
-    </div>
-    
-
-    {/* Pie Chart */}
-    <div style={{ flex: 1 }}>
-      <h4 style={{textAlign: 'center'}}>Distribution by Price Range</h4>
-      <ResponsiveContainer width="100%" height={300}>
-  <PieChart>
-    <defs>
-      <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-        <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#ccc" />
-      </filter>
-    </defs>
-
-    <Pie
-      data={priceRangeData}
-      cx="50%"
-      cy="50%"
-      outerRadius={100}
-      dataKey="value"
-      nameKey="name"
-      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-      isAnimationActive={true}
-      animationDuration={800}
-      filter="url(#shadow)"
-    >
-      {priceRangeData.map((entry, index) => (
-        <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
-      ))}
-    </Pie>
-    <Tooltip content={renderCustomTooltip} />
-    <Legend
-      layout="horizontal"
-      verticalAlign="bottom"
-      align="center"
-      iconType="circle"
-      wrapperStyle={{
-        marginTop: '10px',
-        fontSize: '14px',
-        color: '#444'
-      }}
-    />
-  </PieChart>
-</ResponsiveContainer>
-    </div>
+   <h1 style={{ marginTop: '40px' }}>Product Insights</h1>
+  <div className="chart-wrapper">
+  {/* Bar Chart */}
+  <div className="chart-container">
+    <h4 style={{ textAlign: 'center' }}>Distribution by Category</h4>
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="category" />
+        <YAxis allowDecimals={false} />
+        <Tooltip />
+        <Bar dataKey="count" fill="#4CAF50" />
+      </BarChart>
+    </ResponsiveContainer>
   </div>
+
+  {/* Pie Chart */}
+  <div className="chart-container">
+    <h4 style={{ textAlign: 'center' }}>Distribution by Price Range</h4>
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <defs>
+          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#ccc" />
+          </filter>
+        </defs>
+        <Pie
+          data={priceRangeData}
+          cx="50%"
+          cy="50%"
+          outerRadius={100}
+          dataKey="value"
+          nameKey="name"
+          label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+          isAnimationActive={true}
+          animationDuration={800}
+          filter="url(#shadow)"
+        >
+          {priceRangeData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
+          ))}
+        </Pie>
+        <Tooltip content={renderCustomTooltip} />
+        <Legend
+          layout="horizontal"
+          verticalAlign="bottom"
+          align="center"
+          iconType="circle"
+          wrapperStyle={{
+            marginTop: '10px',
+            fontSize: '14px',
+            color: '#444'
+          }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+</div>
+
+
+  <br></br>
   <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
   <Card
   title="Total Products"
@@ -703,21 +715,14 @@ const handleSendEmail = async () => {
       {editProduct && (
         <div className="modal-overlay">
   <div className="modal">
-    <h3>Edit Product</h3>
+    {/* <h3>Edit Product</h3> */}
+    <h3 style={{ marginBottom: '8px' }}>Edit Product</h3>
     <form onSubmit={handleEditSubmit}>
       <label>Product Name</label>
       <input name="name" value={editProduct.name} onChange={handleEditChange} placeholder="Product Name" required />
-
       <label>Price (₹)</label>
       <input name="price" type="number" value={editProduct.price} onChange={handleEditChange} placeholder="Price" required />
-      <label>Category</label>
-      <select name="category" value={editProduct.category} onChange={handleEditChange} required>
-        <option value="" disabled>Select Category</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-        <option value="D">D</option>
-      </select>
+      
 
       <label>Description</label>
       <input name="description" value={editProduct.description} onChange={handleEditChange} placeholder="Description" required />
@@ -727,7 +732,14 @@ const handleSendEmail = async () => {
 
       <label>Image Link</label>
       <input name="image_link" value={editProduct.image_link} onChange={handleEditChange} placeholder="Image Link" />
-
+      <label>Category</label>
+      <select className="select-category" name="category" value={editProduct.category} onChange={handleEditChange} required>
+        <option value="" disabled>Select Category</option>
+        <option value="A">A</option>
+        <option value="B">B</option>
+        <option value="C">C</option>
+        <option value="D">D</option>
+      </select>
       <button type="submit">Update</button>
       <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
     </form>
