@@ -1,5 +1,3 @@
-// jye shree removeAngleAxis
-// src/UploadExcel.js
 import React from 'react';
 
 function UploadExcel() {
@@ -7,8 +5,7 @@ function UploadExcel() {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
-
-    const res = await fetch("https://appbackend-qmsw.onrender.com/api/send-email-excel", {
+ const res = await fetch("https://appbackend-qmsw.onrender.com/api/send-email-excel", {
       method: "POST",
       body: formData
     });
@@ -30,3 +27,4 @@ function UploadExcel() {
 }
 
 export default UploadExcel;
+
