@@ -7,16 +7,9 @@ import {
   Legend,
 } from 'recharts';
 import Card from './Card';
-import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';  // install if not done
-// import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';
-// import BoxIcon from './BoxIcon'; // Assuming you have a BoxIcon component
-// import { FaBox } from 'react-icons/fa';  // Font Awesome box icon
-
-
+import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';  
 import './App.css';
 import UploadExcel from './UploadExcel';
-// import { PieChart, Pie, Tooltip, Legend, Cell, ResponsiveContainer } from 'recharts';
-// const pieColors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
 const renderCustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
@@ -37,7 +30,27 @@ const renderCustomTooltip = ({ active, payload }) => {
 };
 
 
+
 function App() {
+  // const [adminPassword, setAdminPassword] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const PASSWORD = "radhu";
+
+  const requirePassword = () => {
+    if (isAuthenticated) return true;
+
+    const input = prompt("Enter admin password:");
+    if (input === PASSWORD) {
+      setIsAuthenticated(true);
+      return true;
+    } else {
+      alert("Incorrect password!");
+      return false;
+    }
+  };
+
+
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     name: '',
@@ -47,7 +60,8 @@ function App() {
     image_link: '',
     category: '',
   });
-
+  
+  
   const [editProduct, setEditProduct] = useState(null); // product being edited
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -98,6 +112,7 @@ function App() {
 
   const handleSubmit = async e => {
     e.preventDefault();
+    if (!requirePassword()) return;
     const res = await fetch('https://appbackend-qmsw.onrender.com/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -116,6 +131,7 @@ function App() {
   };
 
   const handleDelete = async id => {
+    if (!requirePassword()) return;
     await fetch(`https://appbackend-qmsw.onrender.com/api/products/${id}`, { method: 'DELETE' });
     setProducts(products.filter(p => p._id !== id));
   };
@@ -131,6 +147,7 @@ function App() {
 
   const handleEditSubmit = async e => {
     e.preventDefault();
+    if (!requirePassword()) return;
     const res = await fetch(`https://appbackend-qmsw.onrender.com/api/products/${editProduct._id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -253,6 +270,7 @@ const pieColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff6e76'];
 // };
 
 const handleSendEmail = async () => {
+  if (!requirePassword()) return;
   setLoadingEmail(true); // Show loader
   try {
     const response = await fetch('https://appbackend-qmsw.onrender.com/api/send-email', {
