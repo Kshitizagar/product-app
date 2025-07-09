@@ -31,4 +31,3 @@ const Card = ({ title, value, icon, color = '#4CAF50', bgColor = '#ffffff' }) =>
 };
 
 export default Card;
-
