@@ -273,7 +273,7 @@ const handleSendEmail = async () => {
   if (!requirePassword()) return;
   setLoadingEmail(true); // Show loader
   try {
-    const response = await fetch('https://appbackend-qmsw.onrender.com/api/send-email', {
+    const response = await fetch('https://appbackend-qmsw.onrender.com/api/sendEmail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ products }),
