@@ -58,6 +58,8 @@ function App() {
     description: '',
     product_link: '',
     image_link: '',
+    form1: '',
+    form2: '',
     category: '',
   });
   
@@ -126,6 +128,8 @@ function App() {
       description: '',
       product_link: '',
       image_link: '',
+      form1: '',
+      form2: '',
       category: ''
     });
   };
@@ -185,14 +189,16 @@ function App() {
 // };
 
 const convertToCSV = (arr) => {
-  const headers = ['Name', 'Price', 'Category', 'Description', 'Product Link', 'Image Link'];
+  const headers = ['Name', 'Price', 'Category', 'Description', 'Product Link', 'Image Link', 'Order Form', 'Refund Form'];
   const rows = arr.map(p => [
     p.name,
     p.price,
     p.category,
     p.description.replace(/[\r\n]+/g, ' '),
     `=HYPERLINK("${p.product_link}", "link")`,
-    `=HYPERLINK("${p.image_link}", "link")`
+    `=HYPERLINK("${p.image_link}", "link")`,
+    p.form1,
+    p.form2
   ]);
 
   const csvContent = [
@@ -222,7 +228,7 @@ const convertToCSV = (arr) => {
 
   const convertToText = (arr) => {
   return arr.map(p =>
-    `Name: ${p.name}\nPrice: ₹${p.price}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nImage Link: ${p.image_link}\n\n`
+    `Name: ${p.name}\nPrice: ₹${p.price}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nOrder Form: ${p.form1}\nRefund Form: ${p.form2}\nImage Link: ${p.image_link}\n\n`
   ).join('');
 };
 
@@ -345,6 +351,8 @@ const handleSendEmail = async () => {
             <option value="C">C</option>
             <option value="D">D</option>
           </select>
+          <input className="form-input" name="form1" placeholder="Order Form" value={form.form1} onChange={handleChange} required />
+          <input className="form-input" name="form2" placeholder="Refund Form" value={form.form2} onChange={handleChange} required />
 
           <button type="submit">Add</button>
         </form>
@@ -581,6 +589,8 @@ const handleSendEmail = async () => {
             <col style={{ width: '20%' }} />  {/* Description */}
             <col style={{ width: '5%' }} />  {/* Product Link */}
             <col style={{ width: '5%' }} />  {/* Image */}
+            <col style={{ width: '5%' }} />  {/* oform */}
+            <col style={{ width: '5%' }} />  {/* rform */}
             <col style={{ width: '10%' }} />  {/* Actions */}
           </colgroup>
           <thead>
@@ -592,6 +602,8 @@ const handleSendEmail = async () => {
               <th>Description</th>
               <th>Product Link</th>
               <th>Image</th>
+              <th>OForm</th>
+              <th>RForm</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -620,6 +632,8 @@ const handleSendEmail = async () => {
                 </td>
                 <td><a href={p.product_link} target="_blank" rel="noopener noreferrer">Open</a></td>
                 <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
+                <td><a href={p.form1} target="_blank" rel="noopener noreferrer">Open</a></td>
+                <td><a href={p.form2} target="_blank" rel="noopener noreferrer">Open</a></td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
@@ -758,6 +772,10 @@ const handleSendEmail = async () => {
         <option value="C">C</option>
         <option value="D">D</option>
       </select>
+      <label>Order Form</label>
+      <input name="form1" value={editProduct.form1} onChange={handleEditChange} placeholder="Order Form" />
+      <label>Refund Form</label>
+      <input name="form2" value={editProduct.form2} onChange={handleEditChange} placeholder="Refund Form" />
       <button type="submit">Update</button>
       <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
     </form>
