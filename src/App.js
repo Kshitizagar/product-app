@@ -9,6 +9,7 @@ import {
 import Card from './Card';
 import { FaBox, FaTags, FaChartLine } from 'react-icons/fa';  
 import './App.css';
+import AddCategory from './AddCategory';
 import UploadExcel from './UploadExcel';
 const renderCustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -69,6 +70,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loadingEmail, setLoadingEmail] = useState(false);
+  const [categories, setCategories] = useState([]);
 
 
   const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
@@ -102,11 +104,16 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetch('https://appbackend-qmsw.onrender.com/api/products')
-      .then(res => res.json())
-      .then(data => setProducts(data));
-  }, []);
+useEffect(() => {
+  fetch('https://appbackend-qmsw.onrender.com/api/products')
+    .then(res => res.json())
+    .then(data => setProducts(data));
+
+  // 🔽 ADD THIS BLOCK TO FETCH CATEGORIES
+  fetch('https://appbackend-qmsw.onrender.com/api/categories')
+    .then(res => res.json())
+    .then(data => setCategories(data));
+}, []);    //categories_new
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -344,13 +351,20 @@ const handleSendEmail = async () => {
           <input className="form-input" name="product_link" placeholder="Product link" value={form.product_link} onChange={handleChange} required />
           <input className="form-input" name="image_link" placeholder="Image link" value={form.image_link} onChange={handleChange} required />
           
-          <select className="form-input" name="category" value={form.category} onChange={handleChange} required>
+          {/* <select className="form-input" name="category" value={form.category} onChange={handleChange} required>
             <option value="" disabled>Select Category</option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
             <option value="D">D</option>
-          </select>
+          </select> */}
+          <select className="form-input" name="category" value={form.category} onChange={handleChange} required>
+            <option value="" disabled>Select Category</option>
+            {categories.map(cat => (
+              <option key={cat._id} value={cat.name}>{cat.name}</option>
+            ))}
+          </select>  
+            
           <input className="form-input" name="form1" placeholder="Order Form" value={form.form1} onChange={handleChange} required />
           <input className="form-input" name="form2" placeholder="Refund Form" value={form.form2} onChange={handleChange} required />
 
@@ -511,10 +525,13 @@ const handleSendEmail = async () => {
           }}
         >
           <option value="">All Categories</option>
-          <option value="A">A</option>
+          {/* <option value="A">A</option>
           <option value="B">B</option>
           <option value="C">C</option>
-          <option value="D">D</option>
+          <option value="D">D</option> */}
+          {categories.map(cat => (
+            <option key={cat._id} value={cat.name}>{cat.name}</option>
+          ))}
         </select>
 
         <input
@@ -576,7 +593,10 @@ const handleSendEmail = async () => {
       {/* <br></br> */}
       <div style={{ marginTop: '20px' }}></div>
 
-      <UploadExcel />
+      <div className="responsive-flex-container">
+        <UploadExcel />
+        <AddCategory />
+      </div>
       <h1>Product List</h1>
 
       <div style={{ overflowX: 'auto' }}>
@@ -765,13 +785,20 @@ const handleSendEmail = async () => {
       <label>Image Link</label>
       <input name="image_link" value={editProduct.image_link} onChange={handleEditChange} placeholder="Image Link" />
       <label>Category</label>
-      <select className="select-category" name="category" value={editProduct.category} onChange={handleEditChange} required>
+      {/* <select className="select-category" name="category" value={editProduct.category} onChange={handleEditChange} required>
         <option value="" disabled>Select Category</option>
         <option value="A">A</option>
         <option value="B">B</option>
         <option value="C">C</option>
         <option value="D">D</option>
+      </select> */}
+      <select name="category" value={editProduct.category} onChange={handleEditChange} required>
+        <option value="" disabled>Select Category</option>
+        {categories.map(cat => (
+          <option key={cat._id} value={cat.name}>{cat.name}</option>
+        ))}
       </select>
+          
       <label>Order Form</label>
       <input name="form1" value={editProduct.form1} onChange={handleEditChange} placeholder="Order Form" />
       <label>Refund Form</label>
