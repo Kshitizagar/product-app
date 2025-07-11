@@ -1,3 +1,17 @@
+.responsive-flex-container {
+  display: flex;
+  flex-direction: row;
+  gap: 1px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .responsive-flex-container {
+    flex-direction: column;
+  }
+}
 
 .select-category {
   width: 110%;
