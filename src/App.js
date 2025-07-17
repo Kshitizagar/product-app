@@ -1,3 +1,5 @@
+git app.js
+
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from 'recharts';
 import {
@@ -62,8 +64,6 @@ function App() {
     form1: '',
     form2: '',
     category: '',
-    status:'',
-    discountedprice: ''
   });
   
   
@@ -72,16 +72,12 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [categories, setCategories] = useState([]); //categories_new
+  const [categories, setCategories] = useState([]);
 
 
-//   const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
-//   category: cat,
-//   count: products.filter(p => p.category === cat).length,
-// }));
-const categoryData = categories.map(cat => ({
-  category: cat.name,
-  count: products.filter(p => p.category === cat.name).length,
+  const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
+  category: cat,
+  count: products.filter(p => p.category === cat).length,
 }));
 
   const productsPerPage = 5;
@@ -110,13 +106,7 @@ const categoryData = categories.map(cat => ({
     }
   };
 
-  // useEffect(() => {
-  //   fetch('https://appbackend-qmsw.onrender.com/api/products')
-  //     .then(res => res.json())
-  //     .then(data => setProducts(data));
-  // }, []);
-
-  useEffect(() => {
+useEffect(() => {
   fetch('https://appbackend-qmsw.onrender.com/api/products')
     .then(res => res.json())
     .then(data => setProducts(data));
@@ -126,7 +116,6 @@ const categoryData = categories.map(cat => ({
     .then(res => res.json())
     .then(data => setCategories(data));
 }, []);    //categories_new
-
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -148,11 +137,9 @@ const categoryData = categories.map(cat => ({
       description: '',
       product_link: '',
       image_link: '',
-      category: '',
       form1: '',
       form2: '',
-      status: '',
-      discountedprice: ''
+      category: ''
     });
   };
 
@@ -211,18 +198,16 @@ const categoryData = categories.map(cat => ({
 // };
 
 const convertToCSV = (arr) => {
-  const headers = ['Name', 'Price', 'Discounted Price', 'Category', 'Description', 'Product Link', 'Image Link', 'Form1', 'Form2', 'Status'];
+  const headers = ['Name', 'Price', 'Category', 'Description', 'Product Link', 'Image Link', 'Order Form', 'Refund Form'];
   const rows = arr.map(p => [
     p.name,
     p.price,
-    p.discountedprice,
     p.category,
     p.description.replace(/[\r\n]+/g, ' '),
     `=HYPERLINK("${p.product_link}", "link")`,
     `=HYPERLINK("${p.image_link}", "link")`,
     p.form1,
-    p.form2,
-    p.status
+    p.form2
   ]);
 
   const csvContent = [
@@ -252,7 +237,7 @@ const convertToCSV = (arr) => {
 
   const convertToText = (arr) => {
   return arr.map(p =>
-    `Name: ${p.name}\nPrice: ₹${p.price}\nLess: ₹${p.discountedprice}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nForm1: ${p.form1}\nForm2: ${p.form2}\nImage Link: ${p.image_link}\nStatus: ${p.status}\n\n`
+    `Name: ${p.name}\nPrice: ₹${p.price}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nOrder Form: ${p.form1}\nRefund Form: ${p.form2}\nImage Link: ${p.image_link}\n\n`
   ).join('');
 };
 
@@ -303,7 +288,7 @@ const handleSendEmail = async () => {
   if (!requirePassword()) return;
   setLoadingEmail(true); // Show loader
   try {
-    const response = await fetch('https://appbackend-qmsw.onrender.com/api/send-email', {
+    const response = await fetch('https://appbackend-qmsw.onrender.com/api/sendEmail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ products }),
@@ -323,7 +308,7 @@ const handleSendEmail = async () => {
 };
 
 
-  console.log("Fetched categories:", categories);
+
   return (
     <div className="container">
       {/* <div style={{
@@ -367,8 +352,6 @@ const handleSendEmail = async () => {
           <input className="form-input" name="description" placeholder="Product description" value={form.description} onChange={handleChange} required />
           <input className="form-input" name="product_link" placeholder="Product link" value={form.product_link} onChange={handleChange} required />
           <input className="form-input" name="image_link" placeholder="Image link" value={form.image_link} onChange={handleChange} required />
-          {/* <input className="form-input" name="form1" placeholder="OForm" value={form.form1} onChange={handleChange} required />
-          <input className="form-input" name="form2" placeholder="RForm" value={form.form2} onChange={handleChange} required /> */}
           
           {/* <select className="form-input" name="category" value={form.category} onChange={handleChange} required>
             <option value="" disabled>Select Category</option>
@@ -383,20 +366,12 @@ const handleSendEmail = async () => {
               <option key={cat._id} value={cat.name}>{cat.name}</option>
             ))}
           </select>  
-          {/* categories_new */}
+            
+          <input className="form-input" name="form1" placeholder="Order Form" value={form.form1} onChange={handleChange} required />
+          <input className="form-input" name="form2" placeholder="Refund Form" value={form.form2} onChange={handleChange} required />
 
-          <input className="form-input" name="form1" placeholder="OForm" value={form.form1} onChange={handleChange} required />
-          <input className="form-input" name="form2" placeholder="RForm" value={form.form2} onChange={handleChange} required />
-          {/* <input className="form-input" name="status" placeholder="Status" value={form.status} onChange={handleChange} required /> */}
-          <select className="form-input" name="status" value={form.status} onChange={handleChange} required>
-            <option value="">Select Status</option>
-            <option value="Available">Available</option>
-            <option value="Out of Stock">Out of Stock</option>
-          </select>
-          <input className="form-input" name="discountedprice" placeholder="Less" value={form.discountedprice} onChange={handleChange} required />
           <button type="submit">Add</button>
         </form>
-        {/* <AddCategory /> */}
 
 
       {/* <h3>Product List</h3> */}
@@ -558,7 +533,7 @@ const handleSendEmail = async () => {
           <option value="D">D</option> */}
           {categories.map(cat => (
             <option key={cat._id} value={cat.name}>{cat.name}</option>
-          ))} {/* categories_new */}
+          ))}
         </select>
 
         <input
@@ -620,24 +595,10 @@ const handleSendEmail = async () => {
       {/* <br></br> */}
       <div style={{ marginTop: '20px' }}></div>
 
-      {/* <UploadExcel />
-      <AddCategory /> */}
       <div className="responsive-flex-container">
         <UploadExcel />
         <AddCategory />
       </div>
-      {/* <div style={{ 
-  display: 'flex', 
-  flexDirection: 'row', 
-  justifyContent: 'space-between', 
-  gap: '16px', 
-  alignItems: 'flex-start' 
-}}>
-  <UploadExcel />
-  <AddCategory />
-</div> */}
-
-
       <h1>Product List</h1>
 
       <div style={{ overflowX: 'auto' }}>
@@ -646,7 +607,6 @@ const handleSendEmail = async () => {
             <col style={{ width: '5%' }} />   {/* S.No */}
             <col style={{ width: '20%' }} />  {/* Name */}
             <col style={{ width: '5%' }} />  {/* Price */}
-            <col style={{ width: '5%' }} />  {/* Less */}
             <col style={{ width: '10%' }} />  {/* Category */}
             <col style={{ width: '20%' }} />  {/* Description */}
             <col style={{ width: '5%' }} />  {/* Product Link */}
@@ -654,21 +614,18 @@ const handleSendEmail = async () => {
             <col style={{ width: '5%' }} />  {/* oform */}
             <col style={{ width: '5%' }} />  {/* rform */}
             <col style={{ width: '10%' }} />  {/* Actions */}
-            <col style={{ width: '5%' }} />  {/* Status */}
           </colgroup>
           <thead>
             <tr>
               <th>S.No</th>
               <th>Name</th>
               <th>Price(₹)</th>
-              <th>Less(₹)</th>
               <th>Category</th>            
               <th>Description</th>
               <th>Product Link</th>
               <th>Image</th>
               <th>OForm</th>
               <th>RForm</th>
-              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -686,7 +643,6 @@ const handleSendEmail = async () => {
                   </div>
                 </td>
                 <td>{p.price}</td>
-                <td>{p.discountedprice}</td>
                 <td>{p.category}</td>
                 <td style={{ position: 'relative' }}>
                   <div className="hover-description">
@@ -700,7 +656,6 @@ const handleSendEmail = async () => {
                 <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
                 <td><a href={p.form1} target="_blank" rel="noopener noreferrer">Open</a></td>
                 <td><a href={p.form2} target="_blank" rel="noopener noreferrer">Open</a></td>
-                <td>{p.status}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
@@ -821,8 +776,6 @@ const handleSendEmail = async () => {
       <input name="name" value={editProduct.name} onChange={handleEditChange} placeholder="Product Name" required />
       <label>Price (₹)</label>
       <input name="price" type="number" value={editProduct.price} onChange={handleEditChange} placeholder="Price" required />
-      <label>Less (₹)</label>
-      <input name="discountedprice" type="number" value={editProduct.discountedprice} onChange={handleEditChange} placeholder="Less" required />
       
 
       <label>Description</label>
@@ -847,22 +800,11 @@ const handleSendEmail = async () => {
           <option key={cat._id} value={cat.name}>{cat.name}</option>
         ))}
       </select>
-      {/* categories_new */}
-
+          
       <label>Order Form</label>
       <input name="form1" value={editProduct.form1} onChange={handleEditChange} placeholder="Order Form" />
       <label>Refund Form</label>
       <input name="form2" value={editProduct.form2} onChange={handleEditChange} placeholder="Refund Form" />
-      {/* <label>Status</label>
-      <input name="status" value={editProduct.status} onChange={handleEditChange} placeholder="Status" /> */}
-      <label>Status</label>
-      <select name="status" value={editProduct.status} onChange={handleEditChange} required>
-        <option value="">Select Status</option>
-        <option value="Available">Available</option>
-        <option value="Out of Stock">Out of Stock</option>
-      </select>
-
-
       <button type="submit">Update</button>
       <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
     </form>
