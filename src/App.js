@@ -62,6 +62,8 @@ function App() {
     form1: '',
     form2: '',
     category: '',
+    status:'',
+    discountedprice: ''
   });
   
   
@@ -73,10 +75,15 @@ function App() {
   const [categories, setCategories] = useState([]);
 
 
-  const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
-  category: cat,
-  count: products.filter(p => p.category === cat).length,
+//   const categoryData = ['A', 'B', 'C', 'D'].map(cat => ({
+//   category: cat,
+//   count: products.filter(p => p.category === cat).length,
+// }));
+const categoryData = categories.map(cat => ({
+  category: cat.name,
+  count: products.filter(p => p.category === cat.name).length,
 }));
+  
 
   const productsPerPage = 5;
 
@@ -137,7 +144,9 @@ useEffect(() => {
       image_link: '',
       form1: '',
       form2: '',
-      category: ''
+      category: '',
+      status: '',
+      discountedprice: ''
     });
   };
 
@@ -196,16 +205,18 @@ useEffect(() => {
 // };
 
 const convertToCSV = (arr) => {
-  const headers = ['Name', 'Price', 'Category', 'Description', 'Product Link', 'Image Link', 'Order Form', 'Refund Form'];
+  const headers = ['Name', 'Price', 'Discounted Price', 'Category', 'Description', 'Product Link', 'Image Link', 'Form1', 'Form2', 'Status'];
   const rows = arr.map(p => [
     p.name,
     p.price,
+    p.discountedprice,
     p.category,
     p.description.replace(/[\r\n]+/g, ' '),
     `=HYPERLINK("${p.product_link}", "link")`,
     `=HYPERLINK("${p.image_link}", "link")`,
     p.form1,
-    p.form2
+    p.form2,
+    p.status
   ]);
 
   const csvContent = [
@@ -217,7 +228,6 @@ const convertToCSV = (arr) => {
 
   return csvContent;
 };
-
 
 
 
@@ -235,7 +245,7 @@ const convertToCSV = (arr) => {
 
   const convertToText = (arr) => {
   return arr.map(p =>
-    `Name: ${p.name}\nPrice: ₹${p.price}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nOrder Form: ${p.form1}\nRefund Form: ${p.form2}\nImage Link: ${p.image_link}\n\n`
+    `Name: ${p.name}\nPrice: ₹${p.price}\nLess: ₹${p.discountedprice}\nCategory: ${p.category}\nDescription: ${p.description}\nProduct Link: ${p.product_link}\nForm1: ${p.form1}\nForm2: ${p.form2}\nImage Link: ${p.image_link}\nStatus: ${p.status}\n\n`
   ).join('');
 };
 
@@ -367,7 +377,13 @@ const handleSendEmail = async () => {
             
           <input className="form-input" name="form1" placeholder="Order Form" value={form.form1} onChange={handleChange} required />
           <input className="form-input" name="form2" placeholder="Refund Form" value={form.form2} onChange={handleChange} required />
-
+          <select className="form-input" name="status" value={form.status} onChange={handleChange} required>
+            <option value="">Select Status</option>
+            <option value="Available">Available</option>
+            <option value="Out of Stock">Out of Stock</option>
+          </select>
+          <input className="form-input" name="discountedprice" placeholder="Less" value={form.discountedprice} onChange={handleChange} required />
+          
           <button type="submit">Add</button>
         </form>
 
@@ -605,6 +621,7 @@ const handleSendEmail = async () => {
             <col style={{ width: '5%' }} />   {/* S.No */}
             <col style={{ width: '20%' }} />  {/* Name */}
             <col style={{ width: '5%' }} />  {/* Price */}
+            <col style={{ width: '5%' }} />  {/* Less */}
             <col style={{ width: '10%' }} />  {/* Category */}
             <col style={{ width: '20%' }} />  {/* Description */}
             <col style={{ width: '5%' }} />  {/* Product Link */}
@@ -612,18 +629,21 @@ const handleSendEmail = async () => {
             <col style={{ width: '5%' }} />  {/* oform */}
             <col style={{ width: '5%' }} />  {/* rform */}
             <col style={{ width: '10%' }} />  {/* Actions */}
+            <col style={{ width: '5%' }} />  {/* Status */}
           </colgroup>
           <thead>
             <tr>
               <th>S.No</th>
               <th>Name</th>
               <th>Price(₹)</th>
+              <th>Less(₹)</th>
               <th>Category</th>            
               <th>Description</th>
               <th>Product Link</th>
               <th>Image</th>
               <th>OForm</th>
               <th>RForm</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -641,6 +661,7 @@ const handleSendEmail = async () => {
                   </div>
                 </td>
                 <td>{p.price}</td>
+                <td>{p.discountedprice}</td>
                 <td>{p.category}</td>
                 <td style={{ position: 'relative' }}>
                   <div className="hover-description">
@@ -654,6 +675,7 @@ const handleSendEmail = async () => {
                 <td><a href={p.image_link} target="_blank" rel="noopener noreferrer">Image</a></td>
                 <td><a href={p.form1} target="_blank" rel="noopener noreferrer">Open</a></td>
                 <td><a href={p.form2} target="_blank" rel="noopener noreferrer">Open</a></td>
+                <td>{p.status}</td>
                 <td>
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
@@ -774,7 +796,9 @@ const handleSendEmail = async () => {
       <input name="name" value={editProduct.name} onChange={handleEditChange} placeholder="Product Name" required />
       <label>Price (₹)</label>
       <input name="price" type="number" value={editProduct.price} onChange={handleEditChange} placeholder="Price" required />
-      
+      <label>Less (₹)</label>
+      <input name="discountedprice" type="number" value={editProduct.discountedprice} onChange={handleEditChange} placeholder="Less" required />
+            
 
       <label>Description</label>
       <input name="description" value={editProduct.description} onChange={handleEditChange} placeholder="Description" required />
@@ -803,6 +827,12 @@ const handleSendEmail = async () => {
       <input name="form1" value={editProduct.form1} onChange={handleEditChange} placeholder="Order Form" />
       <label>Refund Form</label>
       <input name="form2" value={editProduct.form2} onChange={handleEditChange} placeholder="Refund Form" />
+      <label>Status</label>
+      <select name="status" value={editProduct.status} onChange={handleEditChange} required>
+        <option value="">Select Status</option>
+        <option value="Available">Available</option>
+        <option value="Out of Stock">Out of Stock</option>
+      </select>
       <button type="submit">Update</button>
       <button type="button" onClick={() => setEditProduct(null)}>Cancel</button>
     </form>
